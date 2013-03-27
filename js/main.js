@@ -3,10 +3,13 @@ var gl;
 var mainCanvas;
 
 function webGLStart() {
-	mainCanvas=document.getElementById('mainCanvas');
-	if(initGL(mainCanvas) && initShaders() && initBuffers()){
-		
-	}
+	initGL(mainCanvas);
+	initShaders();
+	initBuffers();
+	gl.clearColor(0.0,0.0,0.0,1.0);
+	gl.enable(gl.DEPTH_TEST);
+	
+	drawScene();
 }
 
 function initGL(obj){
@@ -18,9 +21,6 @@ function initGL(obj){
 	if(!gl){
 		alert("could not initialize GL.");
 	}
-	
-	gl.clearColor(0.0,0.0,0.0,1.0);
-	gl.enable(gl.DEPTH_TEST);
 	return true;
 }
 
@@ -28,7 +28,10 @@ function initShaders(){}
 
 function initBuffers(){}
 
+function drawScene(){};
+
 $(document).ready(function() {
+	mainCanvas=document.getElementById('mainCanvas');
 	image=new Image();
 	image.onload = function(){
 		var cnvs=document.getElementById('heightmap_cnvs');
