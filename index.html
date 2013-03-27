@@ -6,20 +6,23 @@
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		
         <script type="text/javascript" src="./js/main.js"></script>
+		<style type="text/css">
+			canvas{
+				float:left;
+			}
+		</style>
     </head>
     <body>
-        <canvas id="GLCanvas" width="1280" height="720">
-            Your Browser Doesn't Support HTML5's Canvas.  
-        </canvas>
+        <canvas id="mainCanvas" width="720" height="400"></canvas>
+		<canvas id="heightmap_cnvs"></canvas>
 		
         <script id="VertexShader" type="x-shader/x-vertex">
             attribute highp vec3 VertexPosition;
             attribute highp vec2 TextureCoord;
-
-
+			
             uniform highp mat4 TransformationMatrix;
             uniform highp mat4 PerspectiveMatrix;
-
+			
             varying highp vec2 vTextureCoord;
 
             void main(void) {

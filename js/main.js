@@ -1,21 +1,12 @@
-var imageObj;
-var imageHeight=512;
-var imageWidth=512;
-var imageData;
+var image;
 var gl;
-
-$(document).ready(function() {
-	imageObj=new Image();
-	imageObj.src="./img/hm1_512_512.jpg";
-	webGLStart();
-});
+var mainCanvas;
 
 function webGLStart() {
-	var obj = document.getElementById('GLCanvas');
-	initGL(obj);
-	initShaders();
-	initBuffers();
-	drawScene();
+	mainCanvas=document.getElementById('mainCanvas');
+	if(initGL(mainCanvas) && initShaders() && initBuffers()){
+		
+	}
 }
 
 function initGL(obj){
@@ -24,14 +15,39 @@ function initGL(obj){
       gl.viewportWidth = obj.width;
       gl.viewportHeight = obj.height;
     } catch(e) {}
+	if(!gl){
+		alert("could not initialize GL.");
+	}
 	
-	this.GL.clearColor(0.0,0.0,0.0,1.0);
-	this.GL.enable(this.GL.DEPTH_TEST);
+	gl.clearColor(0.0,0.0,0.0,1.0);
+	gl.enable(gl.DEPTH_TEST);
+	return true;
 }
 
 function initShaders(){}
 
 function initBuffers(){}
 
-function drawScene(){}
-
+$(document).ready(function() {
+	image=new Image();
+	image.onload = function(){
+		var cnvs=document.getElementById('heightmap_cnvs');
+		if(image.height!==image.width){
+			alert("Image is not a square (eg: 512x512). Please change your height map Image.");
+		}
+		cnvs.height=image.height;
+		cnvs.width=image.width;
+		var ctx=cnvs.getContext("2d");
+		ctx.drawImage(image,0,0);
+		var pixeldata=ctx.getImageData(0,0,cnvs.width,cnvs.height);
+		image.heightmap=new Array();
+		var j=0;
+		for(var i=0;i<pixeldata.data.length;i+=4)
+			{
+				image.heightmap[j]=pixeldata.data[i];
+				j++;
+			}
+		webGLStart();
+	};
+	image.src="./img/height_map.jpg";
+});
