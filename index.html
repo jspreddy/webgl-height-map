@@ -3,7 +3,9 @@
     <head>
         <title></title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<link type="text/css" rel="stylesheet" href="./css/bootstrap.css"/>
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+		<script type="text/javascript" src="./js/gl-matrix.js"></script>
 		
         <script type="text/javascript" src="./js/main.js"></script>
 		<style type="text/css">
@@ -13,34 +15,47 @@
 		</style>
     </head>
     <body>
-        <canvas id="mainCanvas" width="720" height="400"></canvas>
-		<canvas id="heightmap_cnvs"></canvas>
-		
-        <script id="VertexShader" type="x-shader/x-vertex">
-            attribute highp vec3 VertexPosition;
-            attribute highp vec2 TextureCoord;
-			
-            uniform highp mat4 TransformationMatrix;
-            uniform highp mat4 PerspectiveMatrix;
-			
-            varying highp vec2 vTextureCoord;
+		<div class="container">
+			<div class="row">
+				<div class="span10">
+					<h3>Scene:</h3>
+					<canvas id="mainCanvas" width="780" height="512"></canvas>
+				</div>
+			</div>
+			<div class="row">
+				<div class="span10">
+					<h3>Progress:</h3>
+					<div class="progress progress-striped">
+						<div id="progressBar" class="bar bar-success" style="width: 0%;"></div>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="span6">
+					<h3>Height Map:</h3>
+					<canvas id="heightmap_cnvs"></canvas>
+				</div>
+			</div>
 
-            void main(void) {
-				gl_Position = PerspectiveMatrix * TransformationMatrix * vec4(VertexPosition, 1.0);
-				vTextureCoord = TextureCoord;
-            }
-        </script>
 
-        <script id="FragmentShader" type="x-shader/x-fragment">
-            varying highp vec2 vTextureCoord;
+			<script id="shader-fs" type="x-shader/x-fragment">
+				precision mediump float;
 
-            uniform sampler2D uSampler;
+				void main(void) {
+					gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+				}
+			</script>
 
-            void main(void) {
-				highp vec4 texelColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-				gl_FragColor = texelColor;
-            }
-        </script>
+			<script id="shader-vs" type="x-shader/x-vertex">
+				attribute vec3 aVertexPosition;
 
+				uniform mat4 uMVMatrix;
+				uniform mat4 uPMatrix;
+
+				void main(void) {
+					gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+				}
+			</script>
+		</div>
     </body>
 </html>
