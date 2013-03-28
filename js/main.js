@@ -189,7 +189,7 @@ function generateColors(){
 		vertexColors[j++]=temp;
 		vertexColors[j++]=0.0;
 		vertexColors[j++]=0.0;
-		vertexColors[j++]=0.0;
+		vertexColors[j++]=1.0;
 	}
 }
 
