@@ -139,7 +139,7 @@ function generateVertices(){
 		//vertices[3*i + 1]= 0;
 		vertices[3*i + 2]= Math.floor(i / image.width ) * vertexDistance;
 	}
-	console.log(vertices);
+	//console.log(vertices);
 }
 
 function generateTriangleIndices(){
