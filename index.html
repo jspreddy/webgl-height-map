@@ -7,6 +7,7 @@
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		<script type="text/javascript" src="./js/gl-matrix.js"></script>
 		<script type="text/javascript" src="./js/InputHelper.js"></script>
+		<script type="text/javascript" src="./js/TextureHelper.js"></script>
         <script type="text/javascript" src="./js/main.js"></script>
 		<style type="text/css">
 			canvas{
@@ -18,6 +19,11 @@
 		<div class="container-fluid">
 			<div class="row-fluid">
 				<h3>Height Map: WebGL</h3>
+			</div>
+			<div class="row">
+				<div class="span10 alert alert-info">
+					<h4>NOTE:</h4> Key map table is at the bottom.<br/> You are looking at the height map from the bottom right.<br/> Change renderer from the select box.
+				</div>
 			</div>
 			<div class="row">
 				<div class="span10 well">
@@ -53,6 +59,13 @@
 				<div class="span6 well">
 					<canvas id="heightmap_cnvs"></canvas>
 				</div>
+				<div class="span6 well">
+					Change Renderer: 
+					<select id="rendererSelect">
+						<option value="TERRAIN">Terrain</option>
+						<option value="LINES" >Lines<option>
+					</select>
+				</div>
 			</div>
 
 
@@ -62,19 +75,49 @@
 				#endif 
 
 				varying vec4 vColor; 
-				varying vec3 vLightWeighting;
+				varying vec2 vVertexTexture;
+				varying float vertexHeight;
+				
+				uniform sampler2D uTexGrass;
+				uniform sampler2D uTexRock;
+				uniform sampler2D uTexSnow;
+				
+				float temp;
+				
+				vec4 grassSample;
+				vec4 rockSample;
+				vec4 snowSample;
 
 				void main(void) {
-					//gl_FragColor=vec4(0,0,0,0);
-					gl_FragColor = vec4(vColor.rgb, vColor.a);
-					//gl_FragColor = vec4(vColor.rgb , vColor.a);
+					//gl_FragColor = vec4(vColor.rgb, vColor.a);
+					grassSample=texture2D(uTexGrass, vec2(vVertexTexture.x, vVertexTexture.y));
+					rockSample=texture2D(uTexRock, vec2(vVertexTexture.x, vVertexTexture.y));
+					snowSample=texture2D(uTexSnow, vec2(vVertexTexture.x, vVertexTexture.y));
+					
+					if(vertexHeight < 5.0){
+						gl_FragColor=grassSample;
+					}
+					else if(vertexHeight >=5.0 && vertexHeight < 8.0){
+						temp=((vertexHeight-5.0)/3.0);
+						gl_FragColor= (1.0-temp)*grassSample + (temp)*rockSample;
+					}
+					else if(vertexHeight>=8.0 && vertexHeight < 24.0){
+						gl_FragColor=rockSample;
+					}
+					else if(vertexHeight >= 24.0 && vertexHeight < 27.0){
+						temp=((vertexHeight-24.0)/3.0);
+						gl_FragColor= (1.0-temp)*rockSample + (temp)*snowSample;
+					}
+					else if(vertexHeight >= 27.0){
+						gl_FragColor=snowSample;
+					}
 				}
 			</script>
 
 			<script id="shader-vs" type="x-shader/x-vertex">
 				attribute vec3 aVertexPosition;
 				attribute vec4 aVertexColor;
-				
+				attribute vec2 aVertexTexture;
 
 				uniform mat4 uMVMatrix;
 				uniform mat4 uPMatrix;
@@ -82,13 +125,14 @@
 				uniform vec3 uAmbientColor;
 				
 				varying vec4 vColor; 
-				varying vec3 vLightWeighting;
+				varying vec2 vVertexTexture;
+				varying float vertexHeight;
 				
 				void main(void) {
 					gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
 					vColor = aVertexColor;
-					vLightWeighting = vec3(1.0, 1.0, 1.0);
-					
+					vVertexTexture=aVertexTexture;
+					vertexHeight=aVertexPosition.y;
 				}
 			</script>
 		</div>

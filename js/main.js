@@ -1,5 +1,5 @@
-var MODE="trgl";
-
+var MODE="TERRAIN";
+var texScale=10;
 var image;
 var gl;
 var mainCanvas;
@@ -7,21 +7,24 @@ var shaderProgram;
 var mvMatrix = mat4.create();
 var pMatrix = mat4.create();
 var vertexDistance=1;
-var heightScaleFactor=0.12;
+var heightScaleFactor=0.14;
 
 var vertices;
 var vertexIndices;
 var vertexColors;
+var vertexTexture;
 
 var terrainVertexPositionBuffer;
 var terrainIndexBuffer;
 var terrainVertexColorBuffer;
+var terrainTextureBuffer;
 var sceneInit=false;
 
 function webGLStart() {
 	initGL(mainCanvas);
 	initShaders();
 	initBuffers();
+	initTextures();
 	gl.clearColor(0.5,0.5,0.5,1.0);
 	gl.enable(gl.DEPTH_TEST);
 	gl.depthFunc(gl.LEQUAL);
@@ -59,10 +62,13 @@ function initShaders() {
 	
 	shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
 	shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
+	shaderProgram.vertexTextureAttribute= gl.getAttribLocation(shaderProgram, "aVertexTexture");
 	shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
 	shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
 	shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
-	$('#progressBar').css({"width":"30%"});
+	shaderProgram.samplerUniformLow = gl.getUniformLocation(shaderProgram, "uTexGrass");
+	shaderProgram.samplerUniformMid = gl.getUniformLocation(shaderProgram, "uTexRock");
+	shaderProgram.samplerUniformHigh = gl.getUniformLocation(shaderProgram, "uTexSnow");
 }
 
 function getShader(id) {
@@ -96,30 +102,33 @@ function getShader(id) {
 
 function initBuffers() {
     generateVertices();
-	if(MODE==="lines"){
+	if(MODE==="LINES"){
 		generateLineIndices();
 	}
 	else{
 		generateTriangleIndices();
 	}
 	
-	
+	generateNormals();
 	generateColors();
 	
 	terrainVertexPositionBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, terrainVertexPositionBuffer);
-	
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 	terrainVertexPositionBuffer.itemSize = 3;
     terrainVertexPositionBuffer.numItems = image.width * image.height;
 	
     terrainVertexColorBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, terrainVertexColorBuffer);
-	
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexColors), gl.STATIC_DRAW);
 	terrainVertexColorBuffer.itemSize = 4;
     terrainVertexColorBuffer.numItems = image.width * image.height;
 		
+	terrainTextureBuffer=gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, terrainTextureBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexTexture), gl.STATIC_DRAW);
+	terrainTextureBuffer.itemSize=2;
+	terrainTextureBuffer.numItems=vertexTexture.length/2;
 	
 	terrainIndexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, terrainIndexBuffer);
@@ -129,15 +138,22 @@ function initBuffers() {
 	
 	gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
 	gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
+	gl.enableVertexAttribArray(shaderProgram.vertexTextureAttribute);
 }
 
 function generateVertices(){
 	vertices=new Array();
+	vertexTexture=new Array();
 	for(var i=0;i<image.heightmap.length;i++){
 		vertices[3*i + 0]= (i % image.width) * vertexDistance;
 		vertices[3*i + 1]= image.heightmap[i] * heightScaleFactor;
 		//vertices[3*i + 1]= 0;
 		vertices[3*i + 2]= Math.floor(i / image.width ) * vertexDistance;
+		
+		//vertexTexture[2*i]=(parseFloat( (i % image.width) * vertexDistance) / image.width);
+		//vertexTexture[2*i + 1]=(parseFloat(Math.floor(i % image.height)) / image.height);
+		vertexTexture[2*i]= ((i % image.width) * vertexDistance)/texScale;
+		vertexTexture[2*i + 1]=(Math.floor(i / image.width ) * vertexDistance)/texScale;
 	}
 	//console.log(vertices);
 }
@@ -180,6 +196,8 @@ function generateLineIndices(){
 	//console.log(vertexIndices);
 }
 
+function generateNormals(){}
+
 function generateColors(){
 	vertexColors=new Array();
 	var j=0;
@@ -207,11 +225,25 @@ function drawScene() {
     gl.bindBuffer(gl.ARRAY_BUFFER, terrainVertexColorBuffer);
 	gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, terrainVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
 	
+	gl.bindBuffer(gl.ARRAY_BUFFER, terrainTextureBuffer);
+	gl.vertexAttribPointer(shaderProgram.vertexTextureAttribute, terrainTextureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+	
+	gl.activeTexture(gl.TEXTURE0);
+	gl.bindTexture(gl.TEXTURE_2D, terrainTextureLow);
+	gl.uniform1i(shaderProgram.samplerUniformLow, 0);
+	gl.activeTexture(gl.TEXTURE1);
+	gl.bindTexture(gl.TEXTURE_2D, terrainTextureMid);
+	gl.uniform1i(shaderProgram.samplerUniformMid, 1);
+	gl.activeTexture(gl.TEXTURE2);
+	gl.bindTexture(gl.TEXTURE_2D, terrainTextureHigh);
+	gl.uniform1i(shaderProgram.samplerUniformHigh, 2);
+	
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, terrainIndexBuffer);
 	setMatrixUniforms();
-	if(MODE==="lines"){
+	if(MODE==="LINES"){
 		gl.drawElements(gl.LINE_STRIP, terrainIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-	}else{
+	}
+	else{
 		gl.drawElements(gl.TRIANGLE_STRIP, terrainIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
 	}
 	
@@ -231,6 +263,15 @@ function tick() {
 	}
 }
 
+function changeRenderer(mode){
+	if(mode==="LINES"){
+		MODE="LINES";
+	}
+	else if(mode==="TERRAIN"){
+		MODE="TERRAIN";
+	}
+	initBuffers();
+}
 
 $(document).ready(function() {
 	mainCanvas=document.getElementById('mainCanvas');
@@ -256,8 +297,13 @@ $(document).ready(function() {
 			//console.log("width:"+image.width+", height:"+image.height);
 		webGLStart();
 	};
-	image.src="./img/height_map3.jpg";
+	image.src="./img/height_map4.jpg";
 	currentlyPressedKeys = new Object();
 	document.onkeydown = handleKeyDown;
     document.onkeyup = handleKeyUp;
+	
+	$('#rendererSelect').change(function(){
+		changeRenderer($(this).val());
+	});
+	
 });
