@@ -6,18 +6,21 @@ var mainCanvas;
 var shaderProgram;
 var mvMatrix = mat4.create();
 var pMatrix = mat4.create();
-var vertexDistance=1;
-var heightScaleFactor=0.14;
+var vertexDistance=1.5;
+var heightScaleFactor=0.2;
 
 var vertices;
 var vertexIndices;
-var vertexColors;
+//var vertexColors;
 var vertexTexture;
+var vertexNormals;
 
 var terrainVertexPositionBuffer;
 var terrainIndexBuffer;
-var terrainVertexColorBuffer;
+//var terrainVertexColorBuffer;
 var terrainTextureBuffer;
+var terrainVertexNormalBuffer;
+
 var sceneInit=false;
 
 function webGLStart() {
@@ -25,7 +28,7 @@ function webGLStart() {
 	initShaders();
 	initBuffers();
 	initTextures();
-	gl.clearColor(0.5,0.5,0.5,1.0);
+	gl.clearColor(0.60, 0.60, 0.70,1.0);
 	gl.enable(gl.DEPTH_TEST);
 	gl.depthFunc(gl.LEQUAL);
 	drawScene();
@@ -61,14 +64,20 @@ function initShaders() {
 	gl.useProgram(shaderProgram);
 	
 	shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-	shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
+	//shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
 	shaderProgram.vertexTextureAttribute= gl.getAttribLocation(shaderProgram, "aVertexTexture");
+	shaderProgram.vertexNormalAttribute= gl.getAttribLocation(shaderProgram, "aVertexNormal");
 	shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
 	shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
 	shaderProgram.ambientColorUniform = gl.getUniformLocation(shaderProgram, "uAmbientColor");
 	shaderProgram.samplerUniformLow = gl.getUniformLocation(shaderProgram, "uTexGrass");
 	shaderProgram.samplerUniformMid = gl.getUniformLocation(shaderProgram, "uTexRock");
 	shaderProgram.samplerUniformHigh = gl.getUniformLocation(shaderProgram, "uTexSnow");
+	shaderProgram.useLightingUniform= gl.getUniformLocation(shaderProgram, "uUseLighting");
+	shaderProgram.lightingDirectionUniform=gl.getUniformLocation(shaderProgram, "uLightingDirection");
+	shaderProgram.directionalColorUniform=gl.getUniformLocation(shaderProgram, "uDirectionalColor");
+	shaderProgram.nMatrixUniform= gl.getUniformLocation(shaderProgram, "uNMatrix");
+	
 }
 
 function getShader(id) {
@@ -110,7 +119,7 @@ function initBuffers() {
 	}
 	
 	generateNormals();
-	generateColors();
+	//generateColors();
 	
 	terrainVertexPositionBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, terrainVertexPositionBuffer);
@@ -118,12 +127,13 @@ function initBuffers() {
 	terrainVertexPositionBuffer.itemSize = 3;
     terrainVertexPositionBuffer.numItems = image.width * image.height;
 	
+	/*
     terrainVertexColorBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, terrainVertexColorBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexColors), gl.STATIC_DRAW);
 	terrainVertexColorBuffer.itemSize = 4;
     terrainVertexColorBuffer.numItems = image.width * image.height;
-		
+		*/
 	terrainTextureBuffer=gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, terrainTextureBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexTexture), gl.STATIC_DRAW);
@@ -136,9 +146,16 @@ function initBuffers() {
     terrainIndexBuffer.itemSize = 1;
     terrainIndexBuffer.numItems = vertexIndices.length;
 	
-	gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
+	terrainVertexNormalBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, terrainVertexNormalBuffer);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW);
+	terrainVertexNormalBuffer.itemSize=3;
+	terrainVertexNormalBuffer.numItems=image.width * image.height;
+	
+	//gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
 	gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 	gl.enableVertexAttribArray(shaderProgram.vertexTextureAttribute);
+	gl.enableVertexAttribArray(shaderProgram.vertexNormalAttribute);
 }
 
 function generateVertices(){
@@ -196,7 +213,58 @@ function generateLineIndices(){
 	//console.log(vertexIndices);
 }
 
-function generateNormals(){}
+function generateNormals() {
+	var normal = vec3.create();
+	var tempVec3=vec3.create();
+	vertexNormals=new Array();
+	var normals_array_Temp=new Array();
+	
+	var i = 0;
+	for (i = 0; i < image.height*image.width; i++)
+	{
+		normals_array_Temp[i] = vec3.fromValues(0.0, 0.0, 0.0);
+	}
+
+	for (i = 0; i < Math.floor(vertexIndices.length / 3); i++)
+	{
+		//getting triangle vertices
+		var index1 = vertexIndices[i * 3];
+		var index2 = vertexIndices[i * 3 + 1];
+		var index3 = vertexIndices[i * 3 + 2];
+
+		//creating vector from vertces
+		var V1 = vec3.fromValues(vertices[index1 * 3], vertices[index1 * 3 + 1], vertices[index1 * 3 + 2]); //x,y,z
+		var V2 = vec3.fromValues(vertices[index3 * 3], vertices[index3 * 3 + 1], vertices[index3 * 3 + 2]);
+		var V3 = vec3.fromValues(vertices[index2 * 3], vertices[index2 * 3 + 1], vertices[index2 * 3 + 2]);
+
+		//side=v1-v2        
+		var side1=vec3.create();
+		var side2=vec3.create();
+		vec3.subtract(side1, V1, V2);
+		vec3.subtract(side2, V1, V3);
+		//side1 X side2
+		vec3.cross(normal, side1, side2);
+
+		if (normal[2] < 0)
+		{
+			vec3.negate(normal, normal);
+		}
+
+		vec3.add(normals_array_Temp[index1], normals_array_Temp[index1], normal);
+		vec3.add(normals_array_Temp[index2], normals_array_Temp[index2], normal);
+		vec3.add(normals_array_Temp[index3], normals_array_Temp[index3], normal);
+	}
+
+
+	for (i = 0; i < normals_array_Temp.length; i++) {
+		
+		vec3.normalize(tempVec3, normals_array_Temp[i]);
+		vertexNormals[i * 3] = tempVec3[0];
+		vertexNormals[i * 3 + 1] = tempVec3[1];
+		vertexNormals[i * 3 + 2] = tempVec3[2];
+	}
+	//console.log(vertexNormals);
+}
 
 function generateColors(){
 	vertexColors=new Array();
@@ -222,8 +290,8 @@ function drawScene() {
 	gl.bindBuffer(gl.ARRAY_BUFFER, terrainVertexPositionBuffer);
 	gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, terrainVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 	
-    gl.bindBuffer(gl.ARRAY_BUFFER, terrainVertexColorBuffer);
-	gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, terrainVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+   // gl.bindBuffer(gl.ARRAY_BUFFER, terrainVertexColorBuffer);
+	//gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, terrainVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
 	
 	gl.bindBuffer(gl.ARRAY_BUFFER, terrainTextureBuffer);
 	gl.vertexAttribPointer(shaderProgram.vertexTextureAttribute, terrainTextureBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -237,6 +305,28 @@ function drawScene() {
 	gl.activeTexture(gl.TEXTURE2);
 	gl.bindTexture(gl.TEXTURE_2D, terrainTextureHigh);
 	gl.uniform1i(shaderProgram.samplerUniformHigh, 2);
+	
+	gl.bindBuffer(gl.ARRAY_BUFFER, terrainVertexNormalBuffer);
+	gl.vertexAttribPointer(shaderProgram.vertexNormalAttribute, terrainVertexNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+	
+	var lighting = document.getElementById("lighting").checked;
+    gl.uniform1i(shaderProgram.useLightingUniform, lighting);
+	
+	if (lighting) {
+		gl.uniform3f(shaderProgram.ambientColorUniform, 0.40, 0.40, 0.43);
+		
+		var lightingDirection = [-1.0,0.0,-1.0];
+		var adjustedLD = vec3.create();
+		vec3.normalize(adjustedLD, lightingDirection);
+		//vec3.scale(adjustedLD, -1);
+		gl.uniform3fv(shaderProgram.lightingDirectionUniform, adjustedLD);
+		gl.uniform3f(shaderProgram.directionalColorUniform,0.52,0.51,0.5);
+	}
+	
+	var normalMatrix = mat3.create();
+    mat3.normalFromMat4(normalMatrix, mvMatrix);
+    gl.uniformMatrix3fv(shaderProgram.nMatrixUniform, false, normalMatrix);
+	
 	
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, terrainIndexBuffer);
 	setMatrixUniforms();

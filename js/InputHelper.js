@@ -1,5 +1,3 @@
-// JavaScript Document
-
 var currentlyPressedKeys;
 
 function handleKeyDown(event) {
@@ -18,9 +16,9 @@ var basex=50;
 var basey=30;
 var basez=50;
 
-var movedx=0;
-var movedy=0;
-var movedz=0;
+var movedx=132;
+var movedy=43;
+var movedz=137;
 
 
 function handleKeys() {
@@ -43,40 +41,10 @@ function handleKeys() {
 	}
 	else if(currentlyPressedKeys[75] ){ //k
 		movedy--;
-	}else{}
-	
-
+	}
 	
 /*
-	if (currentlyPressedKeys[38]) {
-		// Up cursor key or W
-		speed = -.3;
-	} else if (currentlyPressedKeys[40]) {
-		// Down cursor key
-		speed = .3;
-	} else {
-		speed = 0;
-	}
-
-
-
-	if (currentlyPressedKeys[90]) {
-		// Z
-		strafeSpeed = -.3;
-	} else if (currentlyPressedKeys[88]) {
-		// X
-		strafeSpeed = .3;
-	} else {
-		strafeSpeed = 0;
-	}
-
-	if (currentlyPressedKeys[67]) {
-		// Up cursor key or W
-		yPos += .2;
-	} else if (currentlyPressedKeys[86]) {
-		// Down cursor key
-		yPos -= .2;
-	}
-	//*/
-
+	if(currentlyPressedKeys[80]){ //p
+		console.log("X:"+movedx+", Y:"+movedy+", Z:"+movedz);
+	} //*/
 }
