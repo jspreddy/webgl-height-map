@@ -4,7 +4,7 @@
   "description": "This is a project from my masters program.",
   "main": "index.js",
   "scripts": {
-    "start": "npx http-server ./ -p 61324 -d false -i false"
+    "start": "npx http-server ./ -p 61324 -d false -o"
   },
   "repository": {
     "type": "git",
