@@ -1,0 +1,22 @@
+{
+  "name": "webgl-height-map",
+  "version": "1.0.0",
+  "description": "This is a project from my masters program.",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx http-server ./ -p 61324 -d false -i false"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jspreddy/webgl-height-map.git"
+  },
+  "author": "sai.jonnala",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jspreddy/webgl-height-map/issues"
+  },
+  "homepage": "https://github.com/jspreddy/webgl-height-map#readme",
+  "devDependencies": {
+    "http-server": "^0.11.1"
+  }
+}
