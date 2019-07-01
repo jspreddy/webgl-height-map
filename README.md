@@ -9,5 +9,3 @@ College project for height map - terrain generation in WebGL.
 $> npm install
 $> npm run start
 ```
-
-> NOTE: If running in linux, the unity web player may not work.

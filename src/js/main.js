@@ -366,7 +366,6 @@ $(document).ready(function() {
 	mainCanvas=document.getElementById('mainCanvas');
 	image=new Image();
 	image.onload = function(){
-		$('#progressBar').css({"width":"10%"});
 		var cnvs=document.getElementById('heightmap_cnvs');
 		if(image.height!==image.width){
 			alert("Image is not a square (eg: 512x512). Please change your height map Image.");
@@ -378,14 +377,14 @@ $(document).ready(function() {
 		var pixeldata=ctx.getImageData(0,0,cnvs.width,cnvs.height);
 		image.heightmap=new Array();
 		var j=0;
-		for(var i=0; i<pixeldata.data.length; i+=16) {
+		for(var i=0; i<pixeldata.data.length; i+=4) {
       image.heightmap[j]=pixeldata.data[i];
       j++;
     }
 		console.log("width:"+image.width+", height:"+image.height);
 		webGLStart();
 	};
-	image.src="./img/height_map_1024.jpg";
+	image.src="./img/height_map2.jpg";
 	currentlyPressedKeys = new Object();
 	document.onkeydown = handleKeyDown;
     document.onkeyup = handleKeyUp;
