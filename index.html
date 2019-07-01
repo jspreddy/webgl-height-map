@@ -26,152 +26,87 @@
 				</div>
 			</div>
 			<div class="row">
-				<div class="span10 well">
+				<div class="well">
 					<h4>My WebGL version.</h4>
-					<canvas id="mainCanvas" width="780" height="512"></canvas>
+          <canvas id="mainCanvas" width="1080" height="720"></canvas>
+          <div class="clearfix"></div>
 				</div>
-				<div class="span10 well">
-					<h4>Unity Equivalent.</h4>
-					<script type="text/javascript">
-					<!--
-					var unityObjectUrl = "https://webplayer.unity3d.com/download_webplayer-3.x/3.0/uo/UnityObject2.js";
-					if (document.location.protocol == 'https:')
-						unityObjectUrl = unityObjectUrl.replace("http://", "https://ssl-");
-					document.write('<script type="text\/javascript" src="' + unityObjectUrl + '"><\/script>');
-					-->
-					</script>
-					<script type="text/javascript">
-						var config = {
-							width: 780, 
-							height: 512,
-							params: { enableDebugging:"0" }
-
-						};
-						var u = new UnityObject2(config);
-
-						jQuery(function() {
-
-							var $missingScreen = jQuery("#unityPlayer").find(".missing");
-							var $brokenScreen = jQuery("#unityPlayer").find(".broken");
-							$missingScreen.hide();
-							$brokenScreen.hide();
-
-							u.observeProgress(function (progress) {
-								switch(progress.pluginStatus) {
-									case "broken":
-										$brokenScreen.find("a").click(function (e) {
-											e.stopPropagation();
-											e.preventDefault();
-											u.installPlugin();
-											return false;
-										});
-										$brokenScreen.show();
-									break;
-									case "missing":
-										$missingScreen.find("a").click(function (e) {
-											e.stopPropagation();
-											e.preventDefault();
-											u.installPlugin();
-											return false;
-										});
-										$missingScreen.show();
-									break;
-									case "installed":
-										$missingScreen.remove();
-									break;
-									case "first":
-									break;
-								}
-							});
-							u.initPlugin(jQuery("#unityPlayer")[0], "./unity/unity.unity3d");
-						});
-					</script>
-					<div id="unityPlayer">
-						<div class="missing">
-							<a href="https://unity3d.com/webplayer/" title="Unity Web Player. Install now!">
-								<img alt="Unity Web Player. Install now!" src="https://webplayer.unity3d.com/installation/getunity.png" width="193" height="63" />
-							</a>
-						</div>
-						<div class="broken">
-							<a href="https://unity3d.com/webplayer/" title="Unity Web Player. Install now! Restart your browser after install.">
-								<img alt="Unity Web Player. Install now! Restart your browser after install." src="https://webplayer.unity3d.com/installation/getunityrestart.png" width="193" height="63" />
-							</a>
-						</div>
-					</div>
-				</div>
-				<div class="span4">
-					<table class="table table-bordered">
-						<tr>
-							<th>Action</th> <th>Key</th>
-						</tr>
-						<tr>
-							<td>Forward</td> <td>w</td>
-						</tr>
-						<tr>
-							<td>Backward</td><td>s</td>
-						</tr>
-						<tr>
-							<td>Left</td> <td>a</td>
-						</tr>
-						<tr>
-							<td>Right</td> <td>d</td>
-						</tr>
-						<tr>
-							<td>Up</td> <td>i</td>
-						</tr>
-						<tr>
-							<td>Down</td> <td>k</td>
-						</tr>
-					</table>
-				</div>
-				<div class="span6 well">
-					<canvas id="heightmap_cnvs"></canvas>
-				</div>
-				<div class="span6 well">
-					Change Renderer: 
-					<select id="rendererSelect">
-						<option value="TERRAIN">Terrain</option>
-						<option value="LINES" >Lines<option>
-					</select>
-					<div class="control-group">
-						<div class="controls">
-							<label>
-								<input id="lighting" type="checkbox" checked>
-								Lighting
-							</label>
-						</div>
-					</div>
-				</div>
-			</div>
+      </div>
+      <div class="row">
+        <div class="span4">
+          <table class="table table-bordered">
+            <tr>
+              <th>Action</th> <th>Key</th>
+            </tr>
+            <tr>
+              <td>Forward</td> <td>w</td>
+            </tr>
+            <tr>
+              <td>Backward</td><td>s</td>
+            </tr>
+            <tr>
+              <td>Left</td> <td>a</td>
+            </tr>
+            <tr>
+              <td>Right</td> <td>d</td>
+            </tr>
+            <tr>
+              <td>Up</td> <td>i</td>
+            </tr>
+            <tr>
+              <td>Down</td> <td>k</td>
+            </tr>
+          </table>
+        </div>
+        <div class="well">
+          <canvas id="heightmap_cnvs"></canvas>
+          <div class="clearfix"></div>
+        </div>
+        <div class="span6 well">
+          Change Renderer:
+          <select id="rendererSelect">
+            <option value="TERRAIN">Terrain</option>
+            <option value="LINES" >Lines<option>
+          </select>
+          <div class="control-group">
+            <div class="controls">
+              <label>
+                <input id="lighting" type="checkbox" checked>
+                Lighting
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
 
 
 			<script id="shader-fs" type="x-shader/x-fragment">
-				#ifdef GL_ES 
-					precision highp float; 
-				#endif 
+				#ifdef GL_ES
+					precision highp float;
+				#endif
 
-				//varying vec4 vColor; 
+				//varying vec4 vColor;
 				varying vec2 vVertexTexture;
 				varying float vertexHeight;
 				varying vec3 vLightWeighting;
-				
+
 				uniform sampler2D uTexGrass;
 				uniform sampler2D uTexRock;
 				uniform sampler2D uTexSnow;
-				
+
 				float temp;
-				
+
 				vec4 grassSample;
 				vec4 rockSample;
 				vec4 snowSample;
 				vec4 texColor;
-				
+
 				void main(void) {
 					//gl_FragColor = vec4(vColor.rgb, vColor.a);
 					grassSample=texture2D(uTexGrass, vec2(vVertexTexture.x, vVertexTexture.y));
 					rockSample=texture2D(uTexRock, vec2(vVertexTexture.x, vVertexTexture.y));
 					snowSample=texture2D(uTexSnow, vec2(vVertexTexture.x, vVertexTexture.y));
-					
+
 					if(vertexHeight < 5.0){
 						texColor=grassSample;
 					}
@@ -189,7 +124,7 @@
 					else if(vertexHeight >= 27.0){
 						texColor=snowSample;
 					}
-					
+
 					gl_FragColor = vec4(texColor.rgb * vLightWeighting, texColor.a);
 				}
 			</script>
@@ -198,30 +133,30 @@
 				attribute vec3 aVertexPosition;
 				//attribute vec4 aVertexColor;
 				attribute vec2 aVertexTexture;
-				
+
 				attribute vec3 aVertexNormal;
 				uniform vec3 uLightingDirection;
 				uniform vec3 uDirectionalColor;
 				uniform bool uUseLighting;
-				
+
 
 				uniform mat4 uMVMatrix;
 				uniform mat4 uPMatrix;
 				uniform mat3 uNMatrix;
-				
+
 				uniform vec3 uAmbientColor;
-				
-				//varying vec4 vColor; 
+
+				//varying vec4 vColor;
 				varying vec2 vVertexTexture;
 				varying float vertexHeight;
 				varying vec3 vLightWeighting;
-				
+
 				void main(void) {
 					gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
 					vVertexTexture=aVertexTexture;
 					vertexHeight=aVertexPosition.y;
 					//vColor = aVertexColor;
-					
+
 					if (!uUseLighting) {
 						vLightWeighting = vec3(1.0, 1.0, 1.0);
 					} else {

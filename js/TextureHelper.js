@@ -1,7 +1,7 @@
 var terrainTextureLow;
 var terrainTextureMid;
 var terrainTextureHigh;
-   
+
 function initTextures() {
 	terrainTextureLow = gl.createTexture();
 	terrainTextureLow.image = new Image();

@@ -4,7 +4,7 @@
   "description": "This is a project from my masters program.",
   "main": "index.js",
   "scripts": {
-    "start": "npx http-server ./ -p 61324 -d false -o"
+    "start": "node ./index.js"
   },
   "repository": {
     "type": "git",
@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/jspreddy/webgl-height-map#readme",
   "devDependencies": {
-    "http-server": "^0.11.1"
+    "live-server": "^1.2.1"
   }
 }
