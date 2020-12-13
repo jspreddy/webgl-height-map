@@ -1,37 +1,26 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title></title>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<link type="text/css" rel="stylesheet" href="./css/bootstrap.css"/>
-        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-		<script type="text/javascript" src="./js/gl-matrix.js"></script>
-		<script type="text/javascript" src="./js/InputHelper.js"></script>
-		<script type="text/javascript" src="./js/TextureHelper.js"></script>
-        <script type="text/javascript" src="./js/main.js"></script>
-		<style type="text/css">
-			canvas{
-				float:left;
-			}
-		</style>
+      <title></title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+      <link type="text/css" rel="stylesheet" href="./css/bootstrap.css"/>
+      <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+      <script type="text/javascript" src="./js/gl-matrix.js"></script>
+      <script type="text/javascript" src="./js/InputHelper.js"></script>
+      <script type="text/javascript" src="./js/TextureHelper.js"></script>
+      <script type="text/javascript" src="./js/main.js"></script>
+      <style type="text/css">
+        .canvas {
+          width: 100%
+        }
+      </style>
     </head>
     <body>
-		<div class="container-fluid">
-			<div class="row-fluid">
-				<h3>Height Map: WebGL</h3>
-			</div>
-			<div class="row">
-				<div class="alert alert-info">
-					<h4>NOTE:</h4> Key map table is at the bottom.<br/> You are looking at the height map from the bottom right.<br/> Change renderer from the select box.
-				</div>
-			</div>
-			<div class="row">
-				<div class="well">
-					<h4>My WebGL version.</h4>
-          <canvas id="mainCanvas" width="1080" height="720"></canvas>
-          <div class="clearfix"></div>
-				</div>
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <h3>Height Map: WebGL</h3>
       </div>
+
       <div class="row">
         <div class="span4">
           <table class="table table-bordered">
@@ -59,6 +48,7 @@
           </table>
         </div>
         <div class="well">
+          <p>Here is the height map that will be used to render the terrain. The camera is looking at the map from the bottom left.</p>
           <canvas id="heightmap_cnvs"></canvas>
           <div class="clearfix"></div>
         </div>
@@ -79,93 +69,101 @@
         </div>
       </div>
 
-
-			<script id="shader-fs" type="x-shader/x-fragment">
-				#ifdef GL_ES
-					precision highp float;
-				#endif
-
-				//varying vec4 vColor;
-				varying vec2 vVertexTexture;
-				varying float vertexHeight;
-				varying vec3 vLightWeighting;
-
-				uniform sampler2D uTexGrass;
-				uniform sampler2D uTexRock;
-				uniform sampler2D uTexSnow;
-
-				float temp;
-
-				vec4 grassSample;
-				vec4 rockSample;
-				vec4 snowSample;
-				vec4 texColor;
-
-				void main(void) {
-					//gl_FragColor = vec4(vColor.rgb, vColor.a);
-					grassSample=texture2D(uTexGrass, vec2(vVertexTexture.x, vVertexTexture.y));
-					rockSample=texture2D(uTexRock, vec2(vVertexTexture.x, vVertexTexture.y));
-					snowSample=texture2D(uTexSnow, vec2(vVertexTexture.x, vVertexTexture.y));
-
-					if(vertexHeight < 5.0){
-						texColor=grassSample;
-					}
-					else if(vertexHeight >=5.0 && vertexHeight < 8.0){
-						temp=((vertexHeight-5.0)/3.0);
-						texColor= (1.0-temp)*grassSample + (temp)*rockSample;
-					}
-					else if(vertexHeight>=8.0 && vertexHeight < 24.0){
-						texColor=rockSample;
-					}
-					else if(vertexHeight >= 24.0 && vertexHeight < 27.0){
-						temp=((vertexHeight-24.0)/3.0);
-						texColor= (1.0-temp)*rockSample + (temp)*snowSample;
-					}
-					else if(vertexHeight >= 27.0){
-						texColor=snowSample;
-					}
-
-					gl_FragColor = vec4(texColor.rgb * vLightWeighting, texColor.a);
-				}
-			</script>
-
-			<script id="shader-vs" type="x-shader/x-vertex">
-				attribute vec3 aVertexPosition;
-				//attribute vec4 aVertexColor;
-				attribute vec2 aVertexTexture;
-
-				attribute vec3 aVertexNormal;
-				uniform vec3 uLightingDirection;
-				uniform vec3 uDirectionalColor;
-				uniform bool uUseLighting;
+      <div class="row">
+        <div class="well">
+          <h4>Rendered with WebGL on a Canvas</h4>
+          <canvas id="mainCanvas" width="1920px" height="1080px"  class="canvas"></canvas>
+          <div class="clearfix"></div>
+        </div>
+      </div>
 
 
-				uniform mat4 uMVMatrix;
-				uniform mat4 uPMatrix;
-				uniform mat3 uNMatrix;
+      <script id="shader-fs" type="x-shader/x-fragment">
+        #ifdef GL_ES
+          precision highp float;
+        #endif
 
-				uniform vec3 uAmbientColor;
+        //varying vec4 vColor;
+        varying vec2 vVertexTexture;
+        varying float vertexHeight;
+        varying vec3 vLightWeighting;
 
-				//varying vec4 vColor;
-				varying vec2 vVertexTexture;
-				varying float vertexHeight;
-				varying vec3 vLightWeighting;
+        uniform sampler2D uTexGrass;
+        uniform sampler2D uTexRock;
+        uniform sampler2D uTexSnow;
 
-				void main(void) {
-					gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-					vVertexTexture=aVertexTexture;
-					vertexHeight=aVertexPosition.y;
-					//vColor = aVertexColor;
+        float temp;
 
-					if (!uUseLighting) {
-						vLightWeighting = vec3(1.0, 1.0, 1.0);
-					} else {
-						vec3 transformedNormal = uNMatrix * aVertexNormal;
-						float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
-						vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;
-					}
-				}
-			</script>
-		</div>
+        vec4 grassSample;
+        vec4 rockSample;
+        vec4 snowSample;
+        vec4 texColor;
+
+        void main(void) {
+          //gl_FragColor = vec4(vColor.rgb, vColor.a);
+          grassSample=texture2D(uTexGrass, vec2(vVertexTexture.x, vVertexTexture.y));
+          rockSample=texture2D(uTexRock, vec2(vVertexTexture.x, vVertexTexture.y));
+          snowSample=texture2D(uTexSnow, vec2(vVertexTexture.x, vVertexTexture.y));
+
+          if(vertexHeight < 5.0){
+            texColor=grassSample;
+          }
+          else if(vertexHeight >=5.0 && vertexHeight < 8.0){
+            temp=((vertexHeight-5.0)/3.0);
+            texColor= (1.0-temp)*grassSample + (temp)*rockSample;
+          }
+          else if(vertexHeight>=8.0 && vertexHeight < 24.0){
+            texColor=rockSample;
+          }
+          else if(vertexHeight >= 24.0 && vertexHeight < 27.0){
+            temp=((vertexHeight-24.0)/3.0);
+            texColor= (1.0-temp)*rockSample + (temp)*snowSample;
+          }
+          else if(vertexHeight >= 27.0){
+            texColor=snowSample;
+          }
+
+          gl_FragColor = vec4(texColor.rgb * vLightWeighting, texColor.a);
+        }
+      </script>
+
+      <script id="shader-vs" type="x-shader/x-vertex">
+        attribute vec3 aVertexPosition;
+        //attribute vec4 aVertexColor;
+        attribute vec2 aVertexTexture;
+
+        attribute vec3 aVertexNormal;
+        uniform vec3 uLightingDirection;
+        uniform vec3 uDirectionalColor;
+        uniform bool uUseLighting;
+
+
+        uniform mat4 uMVMatrix;
+        uniform mat4 uPMatrix;
+        uniform mat3 uNMatrix;
+
+        uniform vec3 uAmbientColor;
+
+        //varying vec4 vColor;
+        varying vec2 vVertexTexture;
+        varying float vertexHeight;
+        varying vec3 vLightWeighting;
+
+        void main(void) {
+          gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+          vVertexTexture=aVertexTexture;
+          vertexHeight=aVertexPosition.y;
+          //vColor = aVertexColor;
+
+          if (!uUseLighting) {
+            vLightWeighting = vec3(1.0, 1.0, 1.0);
+          } else {
+            vec3 transformedNormal = uNMatrix * aVertexNormal;
+            float directionalLightWeighting = max(dot(transformedNormal, uLightingDirection), 0.0);
+            vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;
+          }
+        }
+      </script>
+    </div>
     </body>
 </html>
